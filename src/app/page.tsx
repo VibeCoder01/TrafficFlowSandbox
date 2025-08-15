@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -53,28 +54,36 @@ export default function Home() {
               return vehicle;
             }
 
-            // Check for vehicles in front
-            const vehicleInFront = currentVehicles.find(
-              (otherVehicle) =>
-                otherVehicle.id !== vehicle.id &&
-                otherVehicle.direction === vehicle.direction &&
-                otherVehicle.progress > vehicle.progress &&
-                otherVehicle.progress <= nextProgress + 2 // 2 is vehicle length buffer
-            );
-            
-            // 2. Stop for vehicle in front
+            // Check for vehicles in front.
+            // If the current vehicle is inside the intersection, it should ignore vehicles also in the intersection.
+            const isInsideIntersection = vehicle.progress >= intersectionStart && vehicle.progress <= intersectionEnd;
+
+            const vehicleInFront = currentVehicles.find((other) => {
+              if (other.id === vehicle.id || other.direction !== vehicle.direction) return false;
+              
+              const isOtherInsideIntersection = other.progress >= intersectionStart && other.progress <= intersectionEnd;
+
+              // Don't stop for vehicles that are also inside the intersection
+              if (isInsideIntersection && isOtherInsideIntersection) return false;
+
+              // Check if the other vehicle is ahead and within stopping distance
+              return other.progress > vehicle.progress && other.progress <= nextProgress + 2;
+            });
+
+            // 2. Stop for vehicle in front (unless inside intersection)
             if (vehicleInFront) {
               return vehicle;
             }
 
             // 3. Yellow box junction logic: Don't enter intersection unless exit is clear
+            // This check applies just before entering the intersection.
             if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart) {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
                   other.id !== vehicle.id &&
                   other.direction === vehicle.direction &&
                   other.progress >= intersectionEnd &&
-                  other.progress < intersectionEnd + 3 // Buffer beyond intersection
+                  other.progress < intersectionEnd + 3 // Buffer beyond intersection to check for a clear exit
               );
               if (vehicleBlockingExit) {
                 return vehicle; // Wait for exit to be clear
@@ -88,7 +97,7 @@ export default function Home() {
     }, 100 - simulationSpeed);
 
     return () => clearInterval(simulationInterval);
-  }, [simulationSpeed, trafficLightState, vehicles]); // Added vehicles to dependency array for more responsive checks
+  }, [simulationSpeed, trafficLightState]); // Removed vehicles from dependency array to prevent re-renders on every vehicle move
 
   React.useEffect(() => {
     const lightCycle = () => {
