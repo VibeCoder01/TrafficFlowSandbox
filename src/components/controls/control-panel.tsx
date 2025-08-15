@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { AiOptimizer } from "@/components/controls/ai-optimizer";
-import { Car, Bus, Truck, TrafficSignal } from "lucide-react";
+import { Car, Bus, Truck } from "lucide-react";
+import { TrafficLightIcon } from "@/components/icons/traffic-light-icon";
 import { cn } from "@/lib/utils";
 
 interface ControlPanelProps {
@@ -103,7 +104,7 @@ export function ControlPanel({
 
         <SidebarGroup>
             <SidebarGroupLabel className="flex items-center gap-2">
-                <TrafficSignal className="h-4 w-4 text-primary" />
+                <TrafficLightIcon className="h-4 w-4 text-primary" />
                 AI Traffic Optimizer
             </SidebarGroupLabel>
             <SidebarGroupContent>
