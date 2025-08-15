@@ -12,10 +12,10 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   
   let rotationClass = '';
   switch (lane) {
-    case 'north': rotationClass = 'rotate-0'; break;
-    case 'south': rotationClass = 'rotate-180'; break;
-    case 'west': rotationClass = '-rotate-90'; break;
-    case 'east': rotationClass = 'rotate-90'; break;
+    case 'north': rotationClass = 'rotate-90'; break;
+    case 'south': rotationClass = '-rotate-90'; break;
+    case 'west': rotationClass = 'rotate-0'; break;
+    case 'east': rotationClass = 'rotate-180'; break;
   }
   
   const className = cn(commonClasses, config.className, rotationClass)
@@ -51,13 +51,13 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
     
     switch(vehicle.lane) {
         case 'west': // top lane, left to right
-            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%)' };
+            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
         case 'east': // bottom lane, right to left
-            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%)' };
+            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
         case 'north': // left lane, bottom to top
-            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%)' };
+            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translate(-50%, -50%)' };
         case 'south': // right lane, top to bottom
-            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%)' };
+            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translate(-50%, -50%)' };
     }
   };
 
