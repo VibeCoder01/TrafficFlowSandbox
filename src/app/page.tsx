@@ -15,14 +15,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 const LANES: Lane[] = ['north', 'south', 'east', 'west'];
 const VEHICLE_LENGTH_BUFFER = 5; // Spacing between vehicles
+const AMBER_DURATION = 2000;
+const RED_AMBER_DURATION = 2000;
+
 
 export default function Home() {
   const [vehicles, setVehicles] = React.useState<Vehicle[]>([]);
   const [simulationSpeed, setSimulationSpeed] = React.useState(50);
   const [trafficLightState, setTrafficLightState] =
     React.useState<TrafficLightState>("ns-green");
-  const [nsGreenDuration, setNsGreenDuration] = React.useState(3000);
-  const [ewGreenDuration, setEwGreenDuration] = React.useState(3000);
+  const [nsGreenDuration, setNsGreenDuration] = React.useState(5000);
+  const [ewGreenDuration, setEwGreenDuration] = React.useState(5000);
   
   const [spawnProbabilities, setSpawnProbabilities] = React.useState({
     car: 0.8,
@@ -89,14 +92,28 @@ export default function Home() {
             const isVertical = vehicle.lane === 'north' || vehicle.lane === 'south';
             const isHorizontal = vehicle.lane === 'east' || vehicle.lane === 'west';
 
+            const canGo = 
+              (isVertical && (trafficLightState === 'ns-green' || trafficLightState === 'ns-amber')) ||
+              (isHorizontal && (trafficLightState === 'ew-green' || trafficLightState === 'ew-amber'));
+
             const isGreen =
               (isVertical && trafficLightState === 'ns-green') ||
               (isHorizontal && trafficLightState === 'ew-green');
-
-            // 1. Stop at red light before the intersection
-            if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !isGreen) {
+            
+            // Stop at red/red-amber light before the intersection
+            if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !canGo) {
               return { ...vehicle, progress: stopLine }; // Stop at the line
             }
+
+            // At an amber light, stop if you can, but proceed if you're too close to stop safely
+            const isAmber = trafficLightState === 'ns-amber' || trafficLightState === 'ew-amber';
+            if (isAmber && vehicle.progress >= stopLine - 5 && vehicle.progress < intersectionStart) {
+              // If amber, vehicles close to the line should stop, but those who can't will proceed.
+              // This is a simplification; a real check would involve speed and distance.
+              // Here, we'll make them stop if they are at the line.
+               if(vehicle.progress === stopLine) return { ...vehicle, progress: stopLine };
+            }
+
 
             // Check for vehicles in front.
             const isInsideIntersection = vehicle.progress >= intersectionStart && vehicle.progress <= intersectionEnd;
@@ -142,21 +159,30 @@ export default function Home() {
     return () => clearInterval(simulationInterval);
   }, [simulationSpeed, trafficLightState]);
 
+  // Traffic light cycle manager
   React.useEffect(() => {
-    const lightCycle = () => {
-      setTrafficLightState(currentState => {
-        if (currentState === 'ns-green') {
-          return 'ew-green';
-        } else {
-          return 'ns-green';
-        }
-      });
+    let timeoutId: NodeJS.Timeout;
+
+    const sequence: Record<TrafficLightState, { next: TrafficLightState; duration: number }> = {
+      'ns-green': { next: 'ns-amber', duration: nsGreenDuration },
+      'ns-amber': { next: 'ew-red-amber', duration: AMBER_DURATION },
+      'ew-red-amber': { next: 'ew-green', duration: RED_AMBER_DURATION },
+      'ew-green': { next: 'ew-amber', duration: ewGreenDuration },
+      'ew-amber': { next: 'ns-red-amber', duration: AMBER_DURATION },
+      'ns-red-amber': { next: 'ns-green', duration: RED_AMBER_DURATION },
     };
 
-    const intervalId = setInterval(lightCycle, trafficLightState === 'ns-green' ? nsGreenDuration : ewGreenDuration);
+    const lightCycle = () => {
+      const { next, duration } = sequence[trafficLightState];
+      setTrafficLightState(next);
+      timeoutId = setTimeout(lightCycle, duration);
+    };
 
-    return () => clearInterval(intervalId);
+    timeoutId = setTimeout(lightCycle, sequence[trafficLightState].duration);
+
+    return () => clearTimeout(timeoutId);
   }, [trafficLightState, nsGreenDuration, ewGreenDuration]);
+
 
   return (
     <SidebarProvider>

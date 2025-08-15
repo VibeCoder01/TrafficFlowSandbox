@@ -10,4 +10,10 @@ export interface Vehicle {
   lane: Lane;
 }
 
-export type TrafficLightState = 'ns-green' | 'ew-green';
+export type TrafficLightState = 
+  | 'ns-green' 
+  | 'ns-amber' 
+  | 'ew-green' 
+  | 'ew-amber'
+  | 'ns-red-amber'
+  | 'ew-red-amber';

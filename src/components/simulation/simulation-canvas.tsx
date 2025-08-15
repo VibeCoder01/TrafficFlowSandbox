@@ -26,10 +26,11 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   }
 };
 
-const TrafficLight = ({ active }: { active: boolean }) => (
+const TrafficLight = ({ state }: { state: 'red' | 'red-amber' | 'amber' | 'green' }) => (
     <div className="flex flex-col gap-1 rounded-md bg-zinc-800 p-1">
-        <div className={cn("h-3 w-3 rounded-full", active ? "bg-zinc-600" : "bg-red-500 shadow-[0_0_5px_1px_#F44336]")}></div>
-        <div className={cn("h-3 w-3 rounded-full", active ? "bg-green-500 shadow-[0_0_5px_1px_#4CAF50]" : "bg-zinc-600")}></div>
+        <div className={cn("h-3 w-3 rounded-full", state === 'red' || state === 'red-amber' ? "bg-red-500 shadow-[0_0_5px_1px_#F44336]" : "bg-zinc-600")}></div>
+        <div className={cn("h-3 w-3 rounded-full", state === 'amber' || state === 'red-amber' ? "bg-yellow-500 shadow-[0_0_5px_1px_#FFC107]" : "bg-zinc-600")}></div>
+        <div className={cn("h-3 w-3 rounded-full", state === 'green' ? "bg-green-500 shadow-[0_0_5px_1px_#4CAF50]" : "bg-zinc-600")}></div>
     </div>
 )
 
@@ -50,8 +51,23 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
     }
   };
 
-  const nsGreen = trafficLightState === 'ns-green';
-  const ewGreen = trafficLightState === 'ew-green';
+  const getLightState = (forLanes: 'ns' | 'ew'): 'red' | 'red-amber' | 'amber' | 'green' => {
+    if (forLanes === 'ns') {
+      switch (trafficLightState) {
+        case 'ns-green': return 'green';
+        case 'ns-amber': return 'amber';
+        case 'ns-red-amber': return 'red-amber';
+        default: return 'red';
+      }
+    } else { // forLanes === 'ew'
+      switch (trafficLightState) {
+        case 'ew-green': return 'green';
+        case 'ew-amber': return 'amber';
+        case 'ew-red-amber': return 'red-amber';
+        default: return 'red';
+      }
+    }
+  };
 
   return (
     <div className="h-full w-full">
@@ -82,12 +98,12 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
 
         {/* Traffic Lights */}
         {/* N/S Lights */}
-        <div className="absolute top-[calc(50%-48px)] left-[calc(50%+36px)]"><TrafficLight active={nsGreen}/></div>
-        <div className="absolute top-[calc(50%+36px)] left-[calc(50%-48px)] rotate-180"><TrafficLight active={nsGreen}/></div>
+        <div className="absolute top-[calc(50%-52px)] left-[calc(50%+36px)]"><TrafficLight state={getLightState('ns')}/></div>
+        <div className="absolute top-[calc(50%+36px)] left-[calc(50%-52px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
 
         {/* E/W Lights */}
-        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+36px)] -rotate-90"><TrafficLight active={ewGreen}/></div>
-        <div className="absolute top-[calc(50%-48px)] left-[calc(50%-48px)] rotate-90"><TrafficLight active={ewGreen}/></div>
+        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+52px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%-52px)] left-[calc(50%-52px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
 
 
         {/* Vehicles */}
