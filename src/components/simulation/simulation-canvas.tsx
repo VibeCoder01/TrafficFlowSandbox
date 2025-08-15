@@ -41,7 +41,16 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
         <div className="absolute inset-0 overflow-hidden">
             <div className="absolute left-1/2 top-0 h-full w-16 -translate-x-1/2 transform bg-card-foreground/30"></div>
             <div className="absolute top-1/2 left-0 w-full h-16 -translate-y-1/2 transform bg-card-foreground/30"></div>
-             <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 transform bg-card-foreground/40"></div>
+            <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 transform bg-card-foreground/40">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="yellow-hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+                        <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#yellow-hatch)" />
+                </svg>
+            </div>
              <svg width="100%" height="100%" className="absolute inset-0">
                 <line x1="0" y1="50%" x2="calc(50% - 32px)" y2="50%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />
                 <line x1="calc(50% + 32px)" y1="50%" x2="100%" y2="50%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />

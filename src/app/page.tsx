@@ -36,18 +36,24 @@ export default function Home() {
       setVehicles((currentVehicles) => {
         return currentVehicles
           .map((vehicle) => {
+            const nextProgress = vehicle.progress + 1;
+            
+            // Intersection boundaries
+            const intersectionStart = 46;
+            const intersectionEnd = 54;
+            const stopLine = 45;
+
+            // Check traffic light
             const isGreen =
               (vehicle.direction === 'vertical' && trafficLightState === 'ns-green') ||
               (vehicle.direction === 'horizontal' && trafficLightState === 'ew-green');
 
-            const atLight = vehicle.progress > 45 && vehicle.progress < 55;
-
-            if (atLight && !isGreen) {
-              return vehicle; // Stop at red light
+            // 1. Stop at red light before the intersection
+            if (vehicle.progress === stopLine && !isGreen) {
+              return vehicle;
             }
-            
+
             // Check for vehicles in front
-            const nextProgress = vehicle.progress + 1;
             const vehicleInFront = currentVehicles.find(
               (otherVehicle) =>
                 otherVehicle.id !== vehicle.id &&
@@ -55,11 +61,26 @@ export default function Home() {
                 otherVehicle.progress > vehicle.progress &&
                 otherVehicle.progress <= nextProgress + 2 // 2 is vehicle length buffer
             );
-
+            
+            // 2. Stop for vehicle in front
             if (vehicleInFront) {
-              return vehicle; // Stop for vehicle in front
+              return vehicle;
             }
 
+            // 3. Yellow box junction logic: Don't enter intersection unless exit is clear
+            if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart) {
+              const vehicleBlockingExit = currentVehicles.find(
+                (other) =>
+                  other.id !== vehicle.id &&
+                  other.direction === vehicle.direction &&
+                  other.progress >= intersectionEnd &&
+                  other.progress < intersectionEnd + 3 // Buffer beyond intersection
+              );
+              if (vehicleBlockingExit) {
+                return vehicle; // Wait for exit to be clear
+              }
+            }
+            
             return { ...vehicle, progress: nextProgress };
           })
           .filter((v) => v.progress < 100);
@@ -67,7 +88,7 @@ export default function Home() {
     }, 100 - simulationSpeed);
 
     return () => clearInterval(simulationInterval);
-  }, [simulationSpeed, trafficLightState]);
+  }, [simulationSpeed, trafficLightState, vehicles]); // Added vehicles to dependency array for more responsive checks
 
   React.useEffect(() => {
     const lightCycle = () => {
