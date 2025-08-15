@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import type { Vehicle, TrafficLightState } from "@/lib/types";
+import type { Vehicle, TrafficLightState, VehicleType, Lane } from "@/lib/types";
 import {
   SidebarProvider,
   Sidebar,
@@ -13,53 +13,96 @@ import { ControlPanel } from "@/components/controls/control-panel";
 import { SimulationCanvas } from "@/components/simulation/simulation-canvas";
 import { v4 as uuidv4 } from 'uuid';
 
+const LANES: Lane[] = ['north', 'south', 'east', 'west'];
+const VEHICLE_LENGTH_BUFFER = 5; // Spacing between vehicles
+
 export default function Home() {
   const [vehicles, setVehicles] = React.useState<Vehicle[]>([]);
   const [simulationSpeed, setSimulationSpeed] = React.useState(50);
   const [trafficLightState, setTrafficLightState] =
     React.useState<TrafficLightState>("ns-green");
-  const [nsGreenDuration, setNsGreenDuration] = React.useState(3000); // 3 seconds
-  const [ewGreenDuration, setEwGreenDuration] = React.useState(3000); // 3 seconds
+  const [nsGreenDuration, setNsGreenDuration] = React.useState(3000);
+  const [ewGreenDuration, setEwGreenDuration] = React.useState(3000);
+  
+  const [spawnProbabilities, setSpawnProbabilities] = React.useState({
+    car: 0.8,
+    bus: 0.1,
+    lorry: 0.1,
+  });
 
 
-  const addVehicle = (type: Vehicle["type"]) => {
-    const newVehicle: Vehicle = {
-      id: uuidv4(),
-      type,
-      progress: 0,
-      direction: Math.random() > 0.5 ? 'horizontal' : 'vertical',
-    };
-    setVehicles((prev) => [...prev, newVehicle]);
-  };
+  const getVehicleTypeFromProb = (): VehicleType => {
+    const rand = Math.random();
+    let cumulativeProb = 0;
 
+    for (const type in spawnProbabilities) {
+      cumulativeProb += spawnProbabilities[type as VehicleType];
+      if (rand < cumulativeProb) {
+        return type as VehicleType;
+      }
+    }
+    return 'car'; // Fallback
+  }
+
+  // Auto-spawning vehicles
+  React.useEffect(() => {
+    const spawnInterval = setInterval(() => {
+      setVehicles(currentVehicles => {
+        const newVehicles: Vehicle[] = [];
+        
+        LANES.forEach(lane => {
+          // Check if there's a vehicle at the start of the lane
+          const vehicleAtStart = currentVehicles.find(v => v.lane === lane && v.progress < VEHICLE_LENGTH_BUFFER);
+          
+          if (!vehicleAtStart && Math.random() < 0.1) { // 10% chance to spawn each tick if lane is clear
+            const type = getVehicleTypeFromProb();
+            newVehicles.push({
+              id: uuidv4(),
+              type,
+              progress: 0,
+              lane: lane,
+            });
+          }
+        });
+
+        return [...currentVehicles, ...newVehicles];
+      });
+    }, 500); // Attempt to spawn every 500ms
+
+    return () => clearInterval(spawnInterval);
+  }, [spawnProbabilities]);
+
+  // Simulation main loop
   React.useEffect(() => {
     const simulationInterval = setInterval(() => {
       setVehicles((currentVehicles) => {
         return currentVehicles
           .map((vehicle) => {
-            const nextProgress = vehicle.progress + 1;
+            let nextProgress = vehicle.progress + 1;
             
             // Intersection boundaries
             const intersectionStart = 46;
             const intersectionEnd = 54;
             const stopLine = 45;
-            const vehicleLengthBuffer = 4; // Spacing between vehicles
 
             // Check traffic light
+            const isVertical = vehicle.lane === 'north' || vehicle.lane === 'south';
+            const isHorizontal = vehicle.lane === 'east' || vehicle.lane === 'west';
+
             const isGreen =
-              (vehicle.direction === 'vertical' && trafficLightState === 'ns-green') ||
-              (vehicle.direction === 'horizontal' && trafficLightState === 'ew-green');
+              (isVertical && trafficLightState === 'ns-green') ||
+              (isHorizontal && trafficLightState === 'ew-green');
 
             // 1. Stop at red light before the intersection
             if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !isGreen) {
-              return { ...vehicle, progress: stopLine }; // Ensure it stops exactly at the line
+              return { ...vehicle, progress: stopLine }; // Stop at the line
             }
 
             // Check for vehicles in front.
             const isInsideIntersection = vehicle.progress >= intersectionStart && vehicle.progress <= intersectionEnd;
 
             const vehicleInFront = currentVehicles.find((other) => {
-              if (other.id === vehicle.id || other.direction !== vehicle.direction) return false;
+              if (other.id === vehicle.id || other.lane !== vehicle.lane) return false;
               
               const isOtherInsideIntersection = other.progress >= intersectionStart && other.progress <= intersectionEnd;
 
@@ -67,12 +110,13 @@ export default function Home() {
               if (isInsideIntersection && isOtherInsideIntersection) return false;
 
               // Check if the other vehicle is ahead and within stopping distance
-              return other.progress > vehicle.progress && other.progress <= vehicle.progress + vehicleLengthBuffer;
+              return other.progress > vehicle.progress && other.progress <= vehicle.progress + VEHICLE_LENGTH_BUFFER;
             });
 
             // 2. Stop for vehicle in front
             if (vehicleInFront) {
-              return vehicle;
+              // If we are right behind the vehicle in front, don't move.
+              return { ...vehicle, progress: vehicleInFront.progress - VEHICLE_LENGTH_BUFFER };
             }
 
             // 3. Yellow box junction logic: Don't enter intersection unless exit is clear
@@ -80,9 +124,9 @@ export default function Home() {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
                   other.id !== vehicle.id &&
-                  other.direction === vehicle.direction &&
+                  other.lane === vehicle.lane &&
                   other.progress >= intersectionEnd &&
-                  other.progress < intersectionEnd + vehicleLengthBuffer // Check a vehicle's length ahead
+                  other.progress < intersectionEnd + VEHICLE_LENGTH_BUFFER
               );
               if (vehicleBlockingExit) {
                 return { ...vehicle, progress: stopLine }; // Wait at the stop line
@@ -96,7 +140,7 @@ export default function Home() {
     }, 100 - simulationSpeed);
 
     return () => clearInterval(simulationInterval);
-  }, [simulationSpeed, trafficLightState]); // Removed vehicles from dependency array to prevent re-renders on every vehicle move
+  }, [simulationSpeed, trafficLightState]);
 
   React.useEffect(() => {
     const lightCycle = () => {
@@ -118,15 +162,14 @@ export default function Home() {
     <SidebarProvider>
       <Sidebar side="right" collapsible="icon">
         <ControlPanel
-          onAddVehicle={addVehicle}
           simulationSpeed={simulationSpeed}
           onSpeedChange={setSimulationSpeed}
-          trafficLightState={trafficLightState}
-          onTrafficLightChange={setTrafficLightState}
           nsGreenDuration={nsGreenDuration}
           setNsGreenDuration={setNsGreenDuration}
           ewGreenDuration={ewGreenDuration}
           setEwGreenDuration={setEwGreenDuration}
+          spawnProbabilities={spawnProbabilities}
+          setSpawnProbabilities={setSpawnProbabilities}
         />
       </Sidebar>
       <SidebarInset>

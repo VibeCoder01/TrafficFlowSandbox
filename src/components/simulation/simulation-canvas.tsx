@@ -1,13 +1,20 @@
 
 "use client";
 
-import type { Vehicle, TrafficLightState } from "@/lib/types";
+import type { Vehicle, TrafficLightState, Lane } from "@/lib/types";
 import { Car, Bus, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const VehicleIcon = ({ type, direction }: { type: Vehicle["type"], direction: Vehicle['direction'] }) => {
+const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   const commonClasses = "h-5 w-5 text-foreground";
-  const rotationClass = direction === 'vertical' ? 'rotate-90' : '';
+  
+  let rotationClass = '';
+  switch (lane) {
+    case 'north': rotationClass = '-rotate-90'; break;
+    case 'south': rotationClass = 'rotate-90'; break;
+    case 'east': rotationClass = 'scale-x-[-1]'; break; // Flips horizontally
+    case 'west': rotationClass = ''; break;
+  }
   
   switch (type) {
     case "car":
@@ -28,10 +35,18 @@ const TrafficLight = ({ active }: { active: boolean }) => (
 
 export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Vehicle[], trafficLightState: TrafficLightState }) {
   const getVehiclePosition = (vehicle: Vehicle) => {
-    if (vehicle.direction === 'horizontal') {
-        return { top: `50%`, left: `${vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
-    } else {
-        return { top: `${vehicle.progress}%`, left: `50%`, transform: 'translateX(-50%) translateY(-50%)'};
+    // Lane offsets from the center line
+    const laneOffset = '2%'; 
+
+    switch(vehicle.lane) {
+        case 'east':
+            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
+        case 'west':
+            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
+        case 'south':
+            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%) translateY(-50%)'};
+        case 'north':
+            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%) translateY(-50%)'};
     }
   };
 
@@ -55,16 +70,25 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
                 </svg>
             </div>
              <svg width="100%" height="100%" className="absolute inset-0">
-                <line x1="0" y1="50%" x2="calc(50% - 32px)" y2="50%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />
-                <line x1="calc(50% + 32px)" y1="50%" x2="100%" y2="50%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />
-                <line x1="50%" y1="0" x2="50%" y2="calc(50% - 32px)" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />
-                <line x1="50%" y1="calc(50% + 32px)" x2="50%" y2="100%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 10" />
+                {/* Westbound Lane */}
+                <line x1="0" y1="calc(50% - 2%)" x2="calc(50% - 32px)" y2="calc(50% - 2%)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
+                {/* Eastbound Lane */}
+                <line x1="100%" y1="calc(50% + 2%)" x2="calc(50% + 32px)" y2="calc(50% + 2%)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
+
+                {/* Northbound Lane */}
+                <line x1="calc(50% + 2%)" y1="0" x2="calc(50% + 2%)" y2="calc(50% - 32px)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
+                {/* Southbound Lane */}
+                <line x1="calc(50% - 2%)" y1="100%" x2="calc(50% - 2%)" y2="calc(50% + 32px)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
+
              </svg>
         </div>
 
         {/* Traffic Lights */}
+        {/* N/S Lights */}
         <div className="absolute top-[calc(50%-48px)] left-[calc(50%+36px)]"><TrafficLight active={nsGreen}/></div>
         <div className="absolute top-[calc(50%+36px)] left-[calc(50%-48px)] rotate-180"><TrafficLight active={nsGreen}/></div>
+
+        {/* E/W Lights */}
         <div className="absolute top-[calc(50%+36px)] left-[calc(50%+36px)] -rotate-90"><TrafficLight active={ewGreen}/></div>
         <div className="absolute top-[calc(50%-48px)] left-[calc(50%-48px)] rotate-90"><TrafficLight active={ewGreen}/></div>
 
@@ -76,7 +100,7 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
             className="absolute transition-all duration-100 ease-linear"
             style={getVehiclePosition(vehicle)}
             >
-                <VehicleIcon type={vehicle.type} direction={vehicle.direction} />
+                <VehicleIcon type={vehicle.type} lane={vehicle.lane} />
             </div>
         ))}
     </div>

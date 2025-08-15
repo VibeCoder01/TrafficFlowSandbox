@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { Vehicle, TrafficLightState } from "@/lib/types";
+import type { TrafficLightState, VehicleType } from "@/lib/types";
 import {
   SidebarHeader,
   SidebarContent,
@@ -8,34 +9,49 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Car, Bus, Truck } from "lucide-react";
 import { TrafficLightIcon } from "@/components/icons/traffic-light-icon";
 
+type SpawnProbabilities = Record<VehicleType, number>;
+
 interface ControlPanelProps {
-  onAddVehicle: (type: Vehicle["type"]) => void;
   simulationSpeed: number;
   onSpeedChange: (speed: number) => void;
-  trafficLightState: TrafficLightState;
-  onTrafficLightChange: (state: TrafficLightState) => void;
   nsGreenDuration: number;
   setNsGreenDuration: (duration: number) => void;
   ewGreenDuration: number;
   setEwGreenDuration: (duration: number) => void;
+  spawnProbabilities: SpawnProbabilities;
+  setSpawnProbabilities: (probs: SpawnProbabilities) => void;
 }
 
 export function ControlPanel({
-  onAddVehicle,
   simulationSpeed,
   onSpeedChange,
-  trafficLightState,
   nsGreenDuration,
   setNsGreenDuration,
   ewGreenDuration,
-  setEwGreenDuration
+  setEwGreenDuration,
+  spawnProbabilities,
+  setSpawnProbabilities
 }: ControlPanelProps) {
+
+  const handleProbChange = (type: VehicleType, value: number) => {
+    const newProbs = { ...spawnProbabilities, [type]: value / 100 };
+    
+    // Normalize probabilities so they sum to 1
+    const totalProb = Object.values(newProbs).reduce((sum, p) => sum + p, 0);
+    if (totalProb > 0) {
+      for (const key in newProbs) {
+        (newProbs as any)[key] = (newProbs as any)[key] / totalProb;
+      }
+    }
+
+    setSpawnProbabilities(newProbs);
+  };
+
   return (
     <>
       <SidebarHeader>
@@ -43,29 +59,50 @@ export function ControlPanel({
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Vehicle Spawner</SidebarGroupLabel>
-          <SidebarGroupContent className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <Button
-              variant="outline"
-              className="flex-col h-16"
-              onClick={() => onAddVehicle("car")}
-            >
-              <Car className="mb-1" /> Car
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-16"
-              onClick={() => onAddVehicle("bus")}
-            >
-              <Bus className="mb-1" /> Bus
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-16"
-              onClick={() => onAddVehicle("lorry")}
-            >
-              <Truck className="mb-1" /> Lorry
-            </Button>
+          <SidebarGroupLabel>Vehicle Spawn Probability</SidebarGroupLabel>
+          <SidebarGroupContent className="space-y-4">
+             <div>
+               <Label htmlFor="car-prob-slider" className="text-xs flex items-center gap-2"><Car className="h-4 w-4" /> Car</Label>
+               <div className="flex items-center gap-4">
+                   <Slider
+                       id="car-prob-slider"
+                       min={0}
+                       max={100}
+                       step={1}
+                       value={[Math.round(spawnProbabilities.car * 100)]}
+                       onValueChange={(value) => handleProbChange("car", value[0])}
+                   />
+                   <span className="text-sm font-medium tabular-nums w-12 text-right">{Math.round(spawnProbabilities.car * 100)}%</span>
+               </div>
+             </div>
+              <div>
+               <Label htmlFor="bus-prob-slider" className="text-xs flex items-center gap-2"><Bus className="h-4 w-4" /> Bus</Label>
+               <div className="flex items-center gap-4">
+                   <Slider
+                       id="bus-prob-slider"
+                       min={0}
+                       max={100}
+                       step={1}
+                       value={[Math.round(spawnProbabilities.bus * 100)]}
+                       onValueChange={(value) => handleProbChange("bus", value[0])}
+                   />
+                   <span className="text-sm font-medium tabular-nums w-12 text-right">{Math.round(spawnProbabilities.bus * 100)}%</span>
+               </div>
+             </div>
+             <div>
+               <Label htmlFor="lorry-prob-slider" className="text-xs flex items-center gap-2"><Truck className="h-4 w-4" /> Lorry</Label>
+               <div className="flex items-center gap-4">
+                   <Slider
+                       id="lorry-prob-slider"
+                       min={0}
+                       max={100}
+                       step={1}
+                       value={[Math.round(spawnProbabilities.lorry * 100)]}
+                       onValueChange={(value) => handleProbChange("lorry", value[0])}
+                   />
+                   <span className="text-sm font-medium tabular-nums w-12 text-right">{Math.round(spawnProbabilities.lorry * 100)}%</span>
+               </div>
+             </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
