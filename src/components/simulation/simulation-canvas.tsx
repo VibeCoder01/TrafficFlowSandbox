@@ -4,9 +4,11 @@
 import type { Vehicle, TrafficLightState, Lane } from "@/lib/types";
 import { Car, Bus, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { vehicleConfigs } from "@/lib/config";
 
 const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
-  const commonClasses = "h-5 w-5 text-foreground";
+  const config = vehicleConfigs[type];
+  const commonClasses = "text-foreground absolute";
   
   let rotationClass = '';
   switch (lane) {
@@ -16,13 +18,15 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
     case 'east': rotationClass = 'rotate-90'; break;
   }
   
+  const className = cn(commonClasses, config.className, rotationClass)
+
   switch (type) {
     case "car":
-      return <Car className={cn(commonClasses, "text-blue-400", rotationClass)} />;
+      return <Car className={className} />;
     case "bus":
-      return <Bus className={cn(commonClasses, "text-yellow-400 h-6 w-6", rotationClass)} />;
+      return <Bus className={className} />;
     case "lorry":
-      return <Truck className={cn(commonClasses, "text-green-400 h-7 w-7", rotationClass)} />;
+      return <Truck className={className} />;
   }
 };
 
@@ -36,18 +40,17 @@ const TrafficLight = ({ state }: { state: 'red' | 'red-amber' | 'amber' | 'green
 
 export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Vehicle[], trafficLightState: TrafficLightState }) {
   const getVehiclePosition = (vehicle: Vehicle) => {
-    // Lane offsets from the center line for left-hand traffic
     const laneOffset = '2%'; 
 
     switch(vehicle.lane) {
-        case 'west': // Top half, moving left to right
-            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%)' };
-        case 'east': // Bottom half, moving right to left
-            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%)' };
-        case 'north': // Left half, moving bottom to top
-            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%)'};
-        case 'south': // Right half, moving top to bottom
-            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%)'};
+        case 'west': 
+            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
+        case 'east': 
+            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
+        case 'north':
+            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translate(-50%, -50%)'};
+        case 'south': 
+            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translate(-50%, -50%)'};
     }
   };
 
@@ -86,15 +89,12 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
                 </svg>
             </div>
              <svg width="100%" height="100%" className="absolute inset-0">
-                {/* Horizontal center line */}
                 <line x1="0" y1="50%" x2="calc(50% - 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
                 <line x1="100%" y1="50%" x2="calc(50% + 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
 
-                {/* Vertical center line */}
                 <line x1="50%" y1="0" x2="50%" y2="calc(50% - 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
                 <line x1="50%" y1="100%" x2="50%" y2="calc(50% + 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
 
-                {/* Stop Lines for Left-Hand Traffic */}
                 {/* Westbound (top lane, left to right) stop line */}
                 <line x1="calc(50% - 40px)" y1="calc(50% - 32px)" x2="calc(50% - 40px)" y2="50%" stroke="white" strokeWidth="2" />
                 {/* Eastbound (bottom lane, right to left) stop line */}

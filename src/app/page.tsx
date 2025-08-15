@@ -12,9 +12,9 @@ import { AppHeader } from "@/components/layout/header";
 import { ControlPanel } from "@/components/controls/control-panel";
 import { SimulationCanvas } from "@/components/simulation/simulation-canvas";
 import { v4 as uuidv4 } from 'uuid';
+import { vehicleConfigs } from "@/lib/config";
 
 const LANES: Lane[] = ['north', 'south', 'east', 'west'];
-const VEHICLE_LENGTH_BUFFER = 5; // Spacing between vehicles
 const AMBER_DURATION = 2000;
 const RED_AMBER_DURATION = 2000;
 
@@ -54,8 +54,8 @@ export default function Home() {
         const newVehicles: Vehicle[] = [];
         
         LANES.forEach(lane => {
-          // Check if there's a vehicle at the start of the lane
-          const vehicleAtStart = currentVehicles.find(v => v.lane === lane && v.progress < VEHICLE_LENGTH_BUFFER);
+          const vehicleLength = vehicleConfigs[getVehicleTypeFromProb()].length;
+          const vehicleAtStart = currentVehicles.find(v => v.lane === lane && v.progress < vehicleLength);
           
           if (!vehicleAtStart && Math.random() < 0.1) { // 10% chance to spawn each tick if lane is clear
             const type = getVehicleTypeFromProb();
@@ -82,13 +82,12 @@ export default function Home() {
         return currentVehicles
           .map((vehicle) => {
             let nextProgress = vehicle.progress + 1;
+            const vehicleLength = vehicleConfigs[vehicle.type].length;
             
-            // Intersection boundaries
             const intersectionStart = 46;
             const intersectionEnd = 54;
             const stopLine = 45;
 
-            // Check traffic light
             const isVertical = vehicle.lane === 'north' || vehicle.lane === 'south';
             const isHorizontal = vehicle.lane === 'east' || vehicle.lane === 'west';
 
@@ -100,44 +99,35 @@ export default function Home() {
               (isVertical && trafficLightState === 'ns-green') ||
               (isHorizontal && trafficLightState === 'ew-green');
             
-            // Stop at red/red-amber light before the intersection
             if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !canGo) {
-              return { ...vehicle, progress: stopLine }; // Stop at the line
+              return { ...vehicle, progress: stopLine }; 
             }
 
-            // At an amber light, stop if you can, but proceed if you're too close to stop safely
             const isAmber = trafficLightState === 'ns-amber' || trafficLightState === 'ew-amber';
             if (isAmber && vehicle.progress >= stopLine - 5 && vehicle.progress < intersectionStart) {
-              // This is a simplification; a real check would involve speed and distance.
-              // Here, we'll make them stop if they are at the line.
                if(vehicle.progress === stopLine) return { ...vehicle, progress: stopLine };
             }
 
-
-            // Check for vehicles in front in the same lane.
             const vehicleInFront = currentVehicles.find((other) => {
               if (other.id === vehicle.id || other.lane !== vehicle.lane) return false;
-              
-              // Check if the other vehicle is ahead and within stopping distance
-              return other.progress > vehicle.progress && other.progress <= vehicle.progress + VEHICLE_LENGTH_BUFFER;
+              return other.progress > vehicle.progress && other.progress <= vehicle.progress + vehicleLength;
             });
 
-            // Stop for vehicle in front
             if (vehicleInFront) {
-              return { ...vehicle, progress: vehicleInFront.progress - VEHICLE_LENGTH_BUFFER };
+               const frontVehicleLength = vehicleConfigs[vehicleInFront.type].length;
+               return { ...vehicle, progress: vehicleInFront.progress - frontVehicleLength };
             }
 
-            // Yellow box junction logic: Don't enter intersection unless exit is clear
             if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart && isGreen) {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
                   other.id !== vehicle.id &&
-                  other.lane === vehicle.lane && // Check only own lane
+                  other.lane === vehicle.lane &&
                   other.progress >= intersectionEnd &&
-                  other.progress < intersectionEnd + VEHICLE_LENGTH_BUFFER
+                  other.progress < intersectionEnd + vehicleConfigs[other.type].length
               );
               if (vehicleBlockingExit) {
-                return { ...vehicle, progress: stopLine }; // Wait at the stop line
+                return { ...vehicle, progress: stopLine };
               }
             }
             
