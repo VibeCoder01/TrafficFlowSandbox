@@ -82,7 +82,8 @@ export default function Home() {
         return currentVehicles
           .map((vehicle) => {
             let nextProgress = vehicle.progress + 1;
-            const vehicleLength = vehicleConfigs[vehicle.type].length;
+            const vehicleConfig = vehicleConfigs[vehicle.type];
+            const vehicleLength = vehicleConfig.length;
             
             const intersectionStart = 46;
             const intersectionEnd = 54;
@@ -94,41 +95,46 @@ export default function Home() {
             const canGo = 
               (isVertical && (trafficLightState === 'ns-green' || trafficLightState === 'ns-amber')) ||
               (isHorizontal && (trafficLightState === 'ew-green' || trafficLightState === 'ew-amber'));
-
-            const isGreen =
-              (isVertical && trafficLightState === 'ns-green') ||
-              (isHorizontal && trafficLightState === 'ew-green');
             
+            // Logic for stopping at red/amber lights
             if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !canGo) {
               return { ...vehicle, progress: stopLine }; 
             }
 
+            // Logic for stopping just before intersection if amber, unless too close to stop
             const isAmber = trafficLightState === 'ns-amber' || trafficLightState === 'ew-amber';
-            if (isAmber && vehicle.progress >= stopLine - 5 && vehicle.progress < intersectionStart) {
-               if(vehicle.progress === stopLine) return { ...vehicle, progress: stopLine };
+            if (isAmber && vehicle.progress >= stopLine - 5 && vehicle.progress < stopLine) {
+               // don't slam on brakes, proceed
+            } else if (isAmber && vehicle.progress >= stopLine && vehicle.progress < intersectionStart) {
+               return { ...vehicle, progress: stopLine };
             }
 
+            // Collision detection with vehicle in front
             const vehicleInFront = currentVehicles.find((other) => {
               if (other.id === vehicle.id || other.lane !== vehicle.lane) return false;
-              return other.progress > vehicle.progress && other.progress <= vehicle.progress + vehicleLength;
+              // Check if 'other' is ahead of 'vehicle' and within a certain distance
+              return other.progress > vehicle.progress && other.progress < vehicle.progress + vehicleLength + 2; // +2 for spacing
             });
 
             if (vehicleInFront) {
-               const frontVehicleLength = vehicleConfigs[vehicleInFront.type].length;
-               return { ...vehicle, progress: vehicleInFront.progress - frontVehicleLength };
+               const frontVehicleConfig = vehicleConfigs[vehicleInFront.type];
+               const requiredHeadway = frontVehicleConfig.length + 2; // +2 for spacing
+               const newProgress = vehicleInFront.progress - requiredHeadway;
+               // Ensure progress doesn't go backward
+               return { ...vehicle, progress: Math.max(vehicle.progress, newProgress) };
             }
 
-            if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart && isGreen) {
-              const vehicleBlockingExit = currentVehicles.find(
-                (other) =>
-                  other.id !== vehicle.id &&
-                  other.lane === vehicle.lane &&
-                  other.progress >= intersectionEnd &&
-                  other.progress < intersectionEnd + vehicleConfigs[other.type].length
-              );
-              if (vehicleBlockingExit) {
-                return { ...vehicle, progress: stopLine };
-              }
+            // "Yellow box junction" logic: don't enter intersection if exit isn't clear
+            if (vehicle.progress < stopLine && nextProgress >= stopLine && canGo) {
+                const vehicleBlockingExit = currentVehicles.find(
+                    (other) =>
+                    other.lane === vehicle.lane &&
+                    other.progress >= intersectionEnd &&
+                    other.progress < intersectionEnd + vehicleConfigs[other.type].length + 2 // +2 for spacing
+                );
+                if (vehicleBlockingExit) {
+                    return { ...vehicle, progress: stopLine }; // Stop at the line
+                }
             }
             
             return { ...vehicle, progress: nextProgress };

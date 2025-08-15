@@ -39,18 +39,25 @@ const TrafficLight = ({ state }: { state: 'red' | 'red-amber' | 'amber' | 'green
 )
 
 export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Vehicle[], trafficLightState: TrafficLightState }) {
-  const getVehiclePosition = (vehicle: Vehicle) => {
-    const laneOffset = '2%'; 
-
+  const getVehiclePosition = (vehicle: Vehicle): React.CSSProperties => {
+    // Road is 16 units wide. Centerline is at 50%.
+    // Left-hand traffic. Lanes are ~4 units wide.
+    // Lane centers:
+    // Westbound (top-left): 50% - 4 units = ~47.5%
+    // Eastbound (bottom-right): 50% + 4 units = ~52.5%
+    // Northbound (top-left): 50% - 4 units = ~47.5%
+    // Southbound (bottom-right): 50% + 4 units = ~52.5%
+    const laneOffset = '2.5%'; // Adjusted for better centering
+    
     switch(vehicle.lane) {
-        case 'west': 
-            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
-        case 'east': 
-            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
-        case 'north':
-            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translate(-50%, -50%)'};
-        case 'south': 
-            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translate(-50%, -50%)'};
+        case 'west': // top lane, left to right
+            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%)' };
+        case 'east': // bottom lane, right to left
+            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%)' };
+        case 'north': // left lane, bottom to top
+            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%)' };
+        case 'south': // right lane, top to bottom
+            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%)' };
     }
   };
 
@@ -90,18 +97,20 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
             </div>
              <svg width="100%" height="100%" className="absolute inset-0">
                 <line x1="0" y1="50%" x2="calc(50% - 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
-                <line x1="100%" y1="50%" x2="calc(50% + 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
-
+                <line x1="calc(50% + 32px)" y1="50%" x2="100%" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
+                
                 <line x1="50%" y1="0" x2="50%" y2="calc(50% - 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
-                <line x1="50%" y1="100%" x2="50%" y2="calc(50% + 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
+                <line x1="50%" y1="calc(50% + 32px)" x2="50%" y2="100%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
 
-                {/* Westbound (top lane, left to right) stop line */}
+
+                {/* Stop Lines for Left-Hand Traffic */}
+                {/* Westbound (top lane, approaching from left) */}
                 <line x1="calc(50% - 40px)" y1="calc(50% - 32px)" x2="calc(50% - 40px)" y2="50%" stroke="white" strokeWidth="2" />
-                {/* Eastbound (bottom lane, right to left) stop line */}
+                {/* Eastbound (bottom lane, approaching from right) */}
                 <line x1="calc(50% + 40px)" y1="50%" x2="calc(50% + 40px)" y2="calc(50% + 32px)" stroke="white" strokeWidth="2" />
-                {/* Northbound (left lane, bottom to top) stop line */}
+                {/* Northbound (left lane, approaching from bottom) */}
                 <line x1="calc(50% - 32px)" y1="calc(50% + 40px)" x2="50%" y2="calc(50% + 40px)" stroke="white" strokeWidth="2" />
-                {/* Southbound (right lane, top to bottom) stop line */}
+                {/* Southbound (right lane, approaching from top) */}
                 <line x1="50%" y1="calc(50% - 40px)" x2="calc(50% + 32px)" y2="calc(50% - 40px)" stroke="white" strokeWidth="2" />
              </svg>
         </div>
@@ -119,7 +128,7 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
         {vehicles.map((vehicle) => (
             <div
             key={vehicle.id}
-            className="absolute transition-all duration-100 ease-linear"
+            className="absolute transition-all duration-100 ease-linear flex items-center justify-center"
             style={getVehiclePosition(vehicle)}
             >
                 <VehicleIcon type={vehicle.type} lane={vehicle.lane} />
