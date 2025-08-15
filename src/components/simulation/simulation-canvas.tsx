@@ -1,18 +1,21 @@
+
 "use client";
 
 import type { Vehicle, TrafficLightState } from "@/lib/types";
 import { Car, Bus, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const VehicleIcon = ({ type }: { type: Vehicle["type"] }) => {
+const VehicleIcon = ({ type, direction }: { type: Vehicle["type"], direction: Vehicle['direction'] }) => {
   const commonClasses = "h-5 w-5 text-foreground";
+  const rotationClass = direction === 'vertical' ? 'rotate-90' : '';
+  
   switch (type) {
     case "car":
-      return <Car className={cn(commonClasses, "text-blue-400")} />;
+      return <Car className={cn(commonClasses, "text-blue-400", rotationClass)} />;
     case "bus":
-      return <Bus className={cn(commonClasses, "text-yellow-400 h-6 w-6")} />;
+      return <Bus className={cn(commonClasses, "text-yellow-400 h-6 w-6", rotationClass)} />;
     case "lorry":
-      return <Truck className={cn(commonClasses, "text-green-400 h-7 w-7")} />;
+      return <Truck className={cn(commonClasses, "text-green-400 h-7 w-7", rotationClass)} />;
   }
 };
 
@@ -26,9 +29,9 @@ const TrafficLight = ({ active }: { active: boolean }) => (
 export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Vehicle[], trafficLightState: TrafficLightState }) {
   const getVehiclePosition = (vehicle: Vehicle) => {
     if (vehicle.direction === 'horizontal') {
-        return { top: `50%`, left: `${vehicle.progress}%`, transform: 'translate(-50%, -50%)' };
+        return { top: `50%`, left: `${vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
     } else {
-        return { top: `${vehicle.progress}%`, left: `50%`, transform: 'translate(-50%, -50%) rotate(90deg)'};
+        return { top: `${vehicle.progress}%`, left: `50%`, transform: 'translateX(-50%) translateY(-50%)'};
     }
   };
 
@@ -73,7 +76,7 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
             className="absolute transition-all duration-100 ease-linear"
             style={getVehiclePosition(vehicle)}
             >
-                <VehicleIcon type={vehicle.type} />
+                <VehicleIcon type={vehicle.type} direction={vehicle.direction} />
             </div>
         ))}
     </div>

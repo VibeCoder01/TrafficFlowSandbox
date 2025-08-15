@@ -43,6 +43,7 @@ export default function Home() {
             const intersectionStart = 46;
             const intersectionEnd = 54;
             const stopLine = 45;
+            const vehicleLengthBuffer = 4; // Spacing between vehicles
 
             // Check traffic light
             const isGreen =
@@ -50,12 +51,11 @@ export default function Home() {
               (vehicle.direction === 'horizontal' && trafficLightState === 'ew-green');
 
             // 1. Stop at red light before the intersection
-            if (vehicle.progress === stopLine && !isGreen) {
-              return vehicle;
+            if (vehicle.progress >= stopLine && vehicle.progress < intersectionStart && !isGreen) {
+              return { ...vehicle, progress: stopLine }; // Ensure it stops exactly at the line
             }
 
             // Check for vehicles in front.
-            // If the current vehicle is inside the intersection, it should ignore vehicles also in the intersection.
             const isInsideIntersection = vehicle.progress >= intersectionStart && vehicle.progress <= intersectionEnd;
 
             const vehicleInFront = currentVehicles.find((other) => {
@@ -67,26 +67,25 @@ export default function Home() {
               if (isInsideIntersection && isOtherInsideIntersection) return false;
 
               // Check if the other vehicle is ahead and within stopping distance
-              return other.progress > vehicle.progress && other.progress <= nextProgress + 2;
+              return other.progress > vehicle.progress && other.progress <= vehicle.progress + vehicleLengthBuffer;
             });
 
-            // 2. Stop for vehicle in front (unless inside intersection)
+            // 2. Stop for vehicle in front
             if (vehicleInFront) {
               return vehicle;
             }
 
             // 3. Yellow box junction logic: Don't enter intersection unless exit is clear
-            // This check applies just before entering the intersection.
-            if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart) {
+            if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart && isGreen) {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
                   other.id !== vehicle.id &&
                   other.direction === vehicle.direction &&
                   other.progress >= intersectionEnd &&
-                  other.progress < intersectionEnd + 3 // Buffer beyond intersection to check for a clear exit
+                  other.progress < intersectionEnd + vehicleLengthBuffer // Check a vehicle's length ahead
               );
               if (vehicleBlockingExit) {
-                return vehicle; // Wait for exit to be clear
+                return { ...vehicle, progress: stopLine }; // Wait at the stop line
               }
             }
             
