@@ -114,24 +114,16 @@ export default function Home() {
             }
 
 
-            // Check for vehicles in front.
-            const isInsideIntersection = vehicle.progress >= intersectionStart && vehicle.progress <= intersectionEnd;
-
+            // Check for vehicles in front in the same lane.
             const vehicleInFront = currentVehicles.find((other) => {
               if (other.id === vehicle.id || other.lane !== vehicle.lane) return false;
               
-              const isOtherInsideIntersection = other.progress >= intersectionStart && other.progress <= intersectionEnd;
-
-              // Don't stop for vehicles that are also inside the intersection
-              if (isInsideIntersection && isOtherInsideIntersection) return false;
-
               // Check if the other vehicle is ahead and within stopping distance
               return other.progress > vehicle.progress && other.progress <= vehicle.progress + VEHICLE_LENGTH_BUFFER;
             });
 
             // Stop for vehicle in front
             if (vehicleInFront) {
-              // If we are right behind the vehicle in front, don't move.
               return { ...vehicle, progress: vehicleInFront.progress - VEHICLE_LENGTH_BUFFER };
             }
 
@@ -140,7 +132,7 @@ export default function Home() {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
                   other.id !== vehicle.id &&
-                  other.lane === vehicle.lane &&
+                  other.lane === vehicle.lane && // Check only own lane
                   other.progress >= intersectionEnd &&
                   other.progress < intersectionEnd + VEHICLE_LENGTH_BUFFER
               );
