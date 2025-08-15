@@ -10,10 +10,10 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   
   let rotationClass = '';
   switch (lane) {
-    case 'north': rotationClass = '-rotate-90'; break;
-    case 'south': rotationClass = 'rotate-90'; break;
-    case 'east': rotationClass = 'scale-x-[-1]'; break; // Flips horizontally
-    case 'west': rotationClass = ''; break;
+    case 'north': rotationClass = 'rotate-90'; break;
+    case 'south': rotationClass = '-rotate-90'; break;
+    case 'east': rotationClass = ''; break;
+    case 'west': rotationClass = 'scale-x-[-1]'; break; // Flips horizontally
   }
   
   switch (type) {
@@ -41,13 +41,13 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
 
     switch(vehicle.lane) {
         case 'east':
-            return { top: `calc(50% + ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
+            return { top: `calc(50% - ${laneOffset})`, left: `${100 - vehicle.progress}%`, transform: 'translateY(-50%)' };
         case 'west':
-            return { top: `calc(50% - ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%) translateX(-50%)' };
+            return { top: `calc(50% + ${laneOffset})`, left: `${vehicle.progress}%`, transform: 'translateY(-50%)' };
         case 'south':
-            return { top: `${100 - vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%) translateY(-50%)'};
+            return { top: `${100 - vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%)'};
         case 'north':
-            return { top: `${vehicle.progress}%`, left: `calc(50% + ${laneOffset})`, transform: 'translateX(-50%) translateY(-50%)'};
+            return { top: `${vehicle.progress}%`, left: `calc(50% - ${laneOffset})`, transform: 'translateX(-50%)'};
     }
   };
 
@@ -96,24 +96,24 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
 
                 {/* Stop Lines */}
                 {/* Westbound stop line */}
-                <line x1="calc(50% - 40px)" y1="calc(50% - 32px)" x2="calc(50% - 40px)" y2="50%" stroke="white" strokeWidth="2" />
+                <line x1="calc(50% - 40px)" y1="50%" x2="calc(50% - 40px)" y2="calc(50% + 32px)" stroke="white" strokeWidth="2" />
                 {/* Eastbound stop line */}
-                <line x1="calc(50% + 40px)" y1="50%" x2="calc(50% + 40px)" y2="calc(50% + 32px)" stroke="white" strokeWidth="2" />
+                <line x1="calc(50% + 40px)" y1="calc(50% - 32px)" x2="calc(50% + 40px)" y2="50%" stroke="white" strokeWidth="2" />
                 {/* Northbound stop line */}
-                <line x1="50%" y1="calc(50% + 40px)" x2="calc(50% + 32px)" y2="calc(50% + 40px)" stroke="white" strokeWidth="2" />
-                {/* Southbound stop line */}
                 <line x1="calc(50% - 32px)" y1="calc(50% - 40px)" x2="50%" y2="calc(50% - 40px)" stroke="white" strokeWidth="2" />
+                {/* Southbound stop line */}
+                <line x1="50%" y1="calc(50% + 40px)" x2="calc(50% + 32px)" y2="calc(50% + 40px)" stroke="white" strokeWidth="2" />
              </svg>
         </div>
 
         {/* Traffic Lights */}
         {/* N/S Lights */}
-        <div className="absolute top-[calc(50%-52px)] left-[calc(50%+36px)]"><TrafficLight state={getLightState('ns')}/></div>
-        <div className="absolute top-[calc(50%+36px)] left-[calc(50%-52px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
+        <div className="absolute top-[calc(50%-52px)] left-[calc(50%-52px)]"><TrafficLight state={getLightState('ns')}/></div>
+        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+36px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
 
         {/* E/W Lights */}
-        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+52px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
-        <div className="absolute top-[calc(50%-52px)] left-[calc(50%-52px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%+52px)] left-[calc(50%-52px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%-52px)] left-[calc(50%+36px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
 
 
         {/* Vehicles */}
