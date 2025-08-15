@@ -93,6 +93,16 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
                 {/* Vertical center line */}
                 <line x1="50%" y1="0" x2="50%" y2="calc(50% - 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
                 <line x1="50%" y1="100%" x2="50%" y2="calc(50% + 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
+
+                {/* Stop Lines */}
+                {/* Westbound stop line */}
+                <line x1="calc(50% - 40px)" y1="calc(50% - 32px)" x2="calc(50% - 40px)" y2="50%" stroke="white" strokeWidth="2" />
+                {/* Eastbound stop line */}
+                <line x1="calc(50% + 40px)" y1="50%" x2="calc(50% + 40px)" y2="calc(50% + 32px)" stroke="white" strokeWidth="2" />
+                {/* Northbound stop line */}
+                <line x1="50%" y1="calc(50% + 40px)" x2="calc(50% + 32px)" y2="calc(50% + 40px)" stroke="white" strokeWidth="2" />
+                {/* Southbound stop line */}
+                <line x1="calc(50% - 32px)" y1="calc(50% - 40px)" x2="50%" y2="calc(50% - 40px)" stroke="white" strokeWidth="2" />
              </svg>
         </div>
 
