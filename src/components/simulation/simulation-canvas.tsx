@@ -10,8 +10,8 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   
   let rotationClass = '';
   switch (lane) {
+    case 'north': rotationClass = 'rotate-0'; break;
     case 'south': rotationClass = 'rotate-180'; break;
-    case 'north': rotationClass = ''; break;
     case 'west': rotationClass = '-rotate-90'; break;
     case 'east': rotationClass = 'rotate-90'; break;
   }
