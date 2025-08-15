@@ -7,15 +7,12 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { AiOptimizer } from "@/components/controls/ai-optimizer";
 import { Car, Bus, Truck } from "lucide-react";
 import { TrafficLightIcon } from "@/components/icons/traffic-light-icon";
-import { cn } from "@/lib/utils";
 
 interface ControlPanelProps {
   onAddVehicle: (type: Vehicle["type"]) => void;
@@ -23,6 +20,10 @@ interface ControlPanelProps {
   onSpeedChange: (speed: number) => void;
   trafficLightState: TrafficLightState;
   onTrafficLightChange: (state: TrafficLightState) => void;
+  nsGreenDuration: number;
+  setNsGreenDuration: (duration: number) => void;
+  ewGreenDuration: number;
+  setEwGreenDuration: (duration: number) => void;
 }
 
 export function ControlPanel({
@@ -30,7 +31,10 @@ export function ControlPanel({
   simulationSpeed,
   onSpeedChange,
   trafficLightState,
-  onTrafficLightChange,
+  nsGreenDuration,
+  setNsGreenDuration,
+  ewGreenDuration,
+  setEwGreenDuration
 }: ControlPanelProps) {
   return (
     <>
@@ -83,35 +87,40 @@ export function ControlPanel({
                 </div>
             </div>
              <div>
-                <Label>Traffic Lights</Label>
-                <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                        variant={trafficLightState === 'ns-green' ? 'secondary' : 'outline'}
-                        onClick={() => onTrafficLightChange('ns-green')}>
-                        N-S Green
-                    </Button>
-                    <Button 
-                        variant={trafficLightState === 'ew-green' ? 'secondary' : 'outline'}
-                        onClick={() => onTrafficLightChange('ew-green')}>
-                        E-W Green
-                    </Button>
+                <Label className="flex items-center gap-2"><TrafficLightIcon className="h-4 w-4 text-primary" /> Traffic Light Cycle</Label>
+                <div className="space-y-2 pt-2">
+                   <div>
+                     <Label htmlFor="ns-duration-slider" className="text-xs">N-S Green Duration</Label>
+                     <div className="flex items-center gap-4">
+                         <Slider
+                             id="ns-duration-slider"
+                             min={1000}
+                             max={10000}
+                             step={500}
+                             value={[nsGreenDuration]}
+                             onValueChange={(value) => setNsGreenDuration(value[0])}
+                         />
+                         <span className="text-sm font-medium tabular-nums w-12 text-right">{(nsGreenDuration / 1000).toFixed(1)}s</span>
+                     </div>
+                   </div>
+                    <div>
+                     <Label htmlFor="ew-duration-slider" className="text-xs">E-W Green Duration</Label>
+                     <div className="flex items-center gap-4">
+                         <Slider
+                             id="ew-duration-slider"
+                             min={1000}
+                             max={10000}
+                             step={500}
+                             value={[ewGreenDuration]}
+                             onValueChange={(value) => setEwGreenDuration(value[0])}
+                         />
+                         <span className="text-sm font-medium tabular-nums w-12 text-right">{(ewGreenDuration / 1000).toFixed(1)}s</span>
+                     </div>
+                   </div>
                 </div>
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarSeparator />
-
-        <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-                <TrafficLightIcon className="h-4 w-4 text-primary" />
-                AI Traffic Optimizer
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-                <AiOptimizer />
-            </SidebarGroupContent>
-        </SidebarGroup>
-
       </SidebarContent>
     </>
   );

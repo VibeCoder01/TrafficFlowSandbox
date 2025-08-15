@@ -17,6 +17,9 @@ export default function Home() {
   const [simulationSpeed, setSimulationSpeed] = React.useState(50);
   const [trafficLightState, setTrafficLightState] =
     React.useState<TrafficLightState>("ns-green");
+  const [nsGreenDuration, setNsGreenDuration] = React.useState(3000); // 3 seconds
+  const [ewGreenDuration, setEwGreenDuration] = React.useState(3000); // 3 seconds
+
 
   const addVehicle = (type: Vehicle["type"]) => {
     const newVehicle: Vehicle = {
@@ -66,6 +69,22 @@ export default function Home() {
     return () => clearInterval(simulationInterval);
   }, [simulationSpeed, trafficLightState]);
 
+  React.useEffect(() => {
+    const lightCycle = () => {
+      setTrafficLightState(currentState => {
+        if (currentState === 'ns-green') {
+          return 'ew-green';
+        } else {
+          return 'ns-green';
+        }
+      });
+    };
+
+    const intervalId = setInterval(lightCycle, trafficLightState === 'ns-green' ? nsGreenDuration : ewGreenDuration);
+
+    return () => clearInterval(intervalId);
+  }, [trafficLightState, nsGreenDuration, ewGreenDuration]);
+
   return (
     <SidebarProvider>
       <Sidebar side="right" collapsible="icon">
@@ -75,6 +94,10 @@ export default function Home() {
           onSpeedChange={setSimulationSpeed}
           trafficLightState={trafficLightState}
           onTrafficLightChange={setTrafficLightState}
+          nsGreenDuration={nsGreenDuration}
+          setNsGreenDuration={setNsGreenDuration}
+          ewGreenDuration={ewGreenDuration}
+          setEwGreenDuration={setEwGreenDuration}
         />
       </Sidebar>
       <SidebarInset>
