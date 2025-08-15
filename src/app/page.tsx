@@ -30,20 +30,34 @@ export default function Home() {
 
   React.useEffect(() => {
     const simulationInterval = setInterval(() => {
-      setVehicles((prevVehicles) => {
-        return prevVehicles
-          .map((v) => {
+      setVehicles((currentVehicles) => {
+        return currentVehicles
+          .map((vehicle) => {
             const isGreen =
-              (v.direction === 'vertical' && trafficLightState === 'ns-green') ||
-              (v.direction === 'horizontal' && trafficLightState === 'ew-green');
+              (vehicle.direction === 'vertical' && trafficLightState === 'ns-green') ||
+              (vehicle.direction === 'horizontal' && trafficLightState === 'ew-green');
 
-            const atLight = v.progress > 45 && v.progress < 55;
+            const atLight = vehicle.progress > 45 && vehicle.progress < 55;
 
             if (atLight && !isGreen) {
-              return v;
+              return vehicle; // Stop at red light
             }
             
-            return { ...v, progress: v.progress + 1 };
+            // Check for vehicles in front
+            const nextProgress = vehicle.progress + 1;
+            const vehicleInFront = currentVehicles.find(
+              (otherVehicle) =>
+                otherVehicle.id !== vehicle.id &&
+                otherVehicle.direction === vehicle.direction &&
+                otherVehicle.progress > vehicle.progress &&
+                otherVehicle.progress <= nextProgress + 2 // 2 is vehicle length buffer
+            );
+
+            if (vehicleInFront) {
+              return vehicle; // Stop for vehicle in front
+            }
+
+            return { ...vehicle, progress: nextProgress };
           })
           .filter((v) => v.progress < 100);
       });
