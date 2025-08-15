@@ -108,7 +108,6 @@ export default function Home() {
             // At an amber light, stop if you can, but proceed if you're too close to stop safely
             const isAmber = trafficLightState === 'ns-amber' || trafficLightState === 'ew-amber';
             if (isAmber && vehicle.progress >= stopLine - 5 && vehicle.progress < intersectionStart) {
-              // If amber, vehicles close to the line should stop, but those who can't will proceed.
               // This is a simplification; a real check would involve speed and distance.
               // Here, we'll make them stop if they are at the line.
                if(vehicle.progress === stopLine) return { ...vehicle, progress: stopLine };
@@ -130,13 +129,13 @@ export default function Home() {
               return other.progress > vehicle.progress && other.progress <= vehicle.progress + VEHICLE_LENGTH_BUFFER;
             });
 
-            // 2. Stop for vehicle in front
+            // Stop for vehicle in front
             if (vehicleInFront) {
               // If we are right behind the vehicle in front, don't move.
               return { ...vehicle, progress: vehicleInFront.progress - VEHICLE_LENGTH_BUFFER };
             }
 
-            // 3. Yellow box junction logic: Don't enter intersection unless exit is clear
+            // Yellow box junction logic: Don't enter intersection unless exit is clear
             if (vehicle.progress < intersectionStart && nextProgress >= intersectionStart && isGreen) {
               const vehicleBlockingExit = currentVehicles.find(
                 (other) =>
