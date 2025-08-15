@@ -70,16 +70,13 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
                 </svg>
             </div>
              <svg width="100%" height="100%" className="absolute inset-0">
-                {/* Westbound Lane */}
-                <line x1="0" y1="calc(50% - 2%)" x2="calc(50% - 32px)" y2="calc(50% - 2%)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
-                {/* Eastbound Lane */}
-                <line x1="100%" y1="calc(50% + 2%)" x2="calc(50% + 32px)" y2="calc(50% + 2%)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
+                {/* Horizontal center line */}
+                <line x1="0" y1="50%" x2="calc(50% - 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
+                <line x1="100%" y1="50%" x2="calc(50% + 32px)" y2="50%" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
 
-                {/* Northbound Lane */}
-                <line x1="calc(50% + 2%)" y1="0" x2="calc(50% + 2%)" y2="calc(50% - 32px)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
-                {/* Southbound Lane */}
-                <line x1="calc(50% - 2%)" y1="100%" x2="calc(50% - 2%)" y2="calc(50% + 32px)" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="10 5" />
-
+                {/* Vertical center line */}
+                <line x1="50%" y1="0" x2="50%" y2="calc(50% - 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
+                <line x1="50%" y1="100%" x2="50%" y2="calc(50% + 32px)" stroke="white" strokeWidth="1" strokeDasharray="10 5" />
              </svg>
         </div>
 
