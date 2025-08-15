@@ -108,12 +108,12 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
 
         {/* Traffic Lights */}
         {/* N/S Lights */}
-        <div className="absolute top-[calc(50%+40px)] left-[calc(50%-72px)]"><TrafficLight state={getLightState('ns')}/></div>
-        <div className="absolute top-[calc(50%-76px)] left-[calc(50%+40px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
+        <div className="absolute top-[calc(50%+48px)] left-[calc(50%-80px)]"><TrafficLight state={getLightState('ns')}/></div>
+        <div className="absolute top-[calc(50%-84px)] left-[calc(50%+48px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
         
         {/* E/W Lights */}
-        <div className="absolute top-[calc(50%+40px)] left-[calc(50%+40px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
-        <div className="absolute top-[calc(50%-76px)] left-[calc(50%-72px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%+48px)] left-[calc(50%+48px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%-84px)] left-[calc(50%-80px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
 
         {/* Vehicles */}
         {vehicles.map((vehicle) => (
