@@ -12,8 +12,8 @@ const VehicleIcon = ({ type, lane }: { type: Vehicle["type"], lane: Lane }) => {
   switch (lane) {
     case 'south': rotationClass = 'rotate-180'; break;
     case 'north': rotationClass = ''; break;
-    case 'west': rotationClass = 'rotate-90'; break;
-    case 'east': rotationClass = '-rotate-90'; break;
+    case 'west': rotationClass = '-rotate-90'; break;
+    case 'east': rotationClass = 'rotate-90'; break;
   }
   
   switch (type) {
@@ -112,8 +112,8 @@ export function SimulationCanvas({ vehicles, trafficLightState }: { vehicles: Ve
         <div className="absolute top-[calc(50%-52px)] left-[calc(50%+36px)] rotate-180"><TrafficLight state={getLightState('ns')}/></div>
 
         {/* E/W Lights */}
-        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+36px)] "><TrafficLight state={getLightState('ew')}/></div>
-        <div className="absolute top-[calc(50%-52px)] left-[calc(50%-52px)] rotate-180"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%+36px)] left-[calc(50%+36px)] -rotate-90"><TrafficLight state={getLightState('ew')}/></div>
+        <div className="absolute top-[calc(50%-52px)] left-[calc(50%-52px)] rotate-90"><TrafficLight state={getLightState('ew')}/></div>
 
 
         {/* Vehicles */}
